@@ -24,6 +24,10 @@ private [jms] class ExceptionCallback[R <: Receiver[JMSEvent]](val parent: R) ex
   }
 }
 
+private [jms] object JavaConveniences {
+  def denull[A <: Any](ref: A): Option[A] = if (ref == null) None else Some(ref)
+}
+
 class UnreliableJMSReceiver(val brokerURL: String, 
                             val username: Option[String],
                             val password: Option[String], 
@@ -31,6 +35,21 @@ class UnreliableJMSReceiver(val brokerURL: String,
                             val selector: Option[String] = None, 
                             override val storageLevel: StorageLevel = StorageLevel.MEMORY_AND_DISK)
     extends Receiver[JMSEvent](storageLevel) with MessageListener with JNDIConstants {
+
+  /** Auxiliary constructor for convenience and Java interoperability */
+  def this(brokerURL: String, queueName: String, username: String = null, password: String = null, selector: String = null, storageLevel: StorageLevel) {
+    this(brokerURL, JavaConveniences.denull(username), JavaConveniences.denull(password), queueName, JavaConveniences.denull(selector), storageLevel)
+  }
+
+  /** Auxiliary constructor for convenience and Java interoperability */
+  def this(brokerURL: String, queueName: String, username: String, password: String, selector: String) {
+    this(brokerURL, username, password, queueName, selector, StorageLevel.MEMORY_AND_DISK)
+  }
+
+  /** Auxiliary constructor for convenience and Java interoperability */
+  def this(brokerURL: String, queueName: String, selector: String) {
+    this(brokerURL, null, null, queueName, selector, StorageLevel.MEMORY_AND_DISK)
+  }
 
   private var connection: Connection = null
 
